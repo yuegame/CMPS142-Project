@@ -1,0 +1,12 @@
+Notes:
+ - nltk has naive Bayes and a buncha other useful ML stuff
+
+Preprocessing:
+
+Tokenize words in phrase to run through naive Bayes:
+ - ignore punctuation
+ - combine abbreviations into one word
+
+Use KNN on phraseID and sentenceID to come up with classification:
+ - if results are decisively one label, factor that with naive Bayes
+ - if not, discard result and only use naive Bayes result
