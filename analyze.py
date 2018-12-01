@@ -15,8 +15,9 @@ def euclidean_calculation(test_row, train_nodes):
     for node in train_nodes:
         dist_sum = 0
         
-        for index in range(0, len(test_row)-2):
-            dist_sum = dist_sum + (int(test_row[index])-int(node[index]))**2
+        dist_sum = dist_sum + (int(test_row[0])-int(node[0]))**2
+        dist_sum = dist_sum + 50*((int(test_row[1])-int(node[1]))**2)
+                
                                    
         distance = math.sqrt(dist_sum)
         node_distances.append((node, distance, node[3]))
