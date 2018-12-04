@@ -7,6 +7,8 @@ import sys
 import math
 import random
 import operator
+from multiprocessing import Pool
+from multiprocessing import Process
 
 num_neighbors = 9
 
@@ -26,6 +28,30 @@ def euclidean_calculation(test_row, train_nodes):
 
     output_list = sorted(node_distances, key=lambda tup:tup[1])
     return output_list
+
+# Multiprocess KNN
+def multi_knn(test_nodes, training_nodes, start, end, results):
+    correct_predictions = 0
+    incorrect_predictions = 0
+    for test_index in range(start, end):
+        print("Index is: ",test_index)
+        neighbors = euclidean_calculation(test_nodes[test_index], train_nodes)
+
+        distribution = {}
+        for i in range(num_neighbors):
+            if int(neighbors[i][2]) not in distribution:
+                distribution[int(neighbors[i][2])] = 1
+            else:
+                distribution[int(neighbors[i][2])] = distribution[int(neighbors[i][2])] + 1
+                
+        prediction = max(distribution.items(), key=operator.itemgetter(1))[0]
+        if int(prediction) == test_nodes[test_index][2]:
+            correct_predictions += 1
+        else:
+            incorrect_predictions += 1
+
+    results[start] = (correct_predictions, incorrect_predictions)
+    
 
 def main():
 
@@ -78,21 +104,29 @@ def main():
 
     correct_predictions = 0
     incorrect_predictions = 0
-    for test_index in range(len(test_nodes)):
-        neighbors = euclidean_calculation(test_nodes[test_index], train_nodes)
+    results={}
 
-        distribution = {}
-        for i in range(num_neighbors):
-            if int(neighbors[i][2]) not in distribution:
-                distribution[int(neighbors[i][2])] = 1
-            else:
-                distribution[int(neighbors[i][2])] = distribution[int(neighbors[i][2])] + 1
-                
-        prediction = max(distribution.items(), key=operator.itemgetter(1))[0]
-        if int(prediction) == test_nodes[test_index][2]:
-            correct_predictions += 1
-        else:
-            incorrect_predictions += 1
+    p1 = Process(target=multi_knn, args=(test_data,training_data,0, 5000,results))
+    p2 = Process(target=multi_knn, args=(test_data,training_data,5000, 10000,results))
+    p3 = Process(target=multi_knn, args=(test_data,training_data,10000, 15000,results))
+    p4 = Process(target=multi_knn, args=(test_data,training_data,15000, 20000,results))
+    p5 = Process(target=multi_knn, args=(test_data,training_data,20000, 25000,results))
+
+    p1.start()
+    p2.start()
+    p3.start()
+    p4.start()
+    p5.start()
+
+    p1.join()
+    p2.join()
+    p3.join()
+    p4.join()
+    p5.join()
+
+    for k in results.keys():
+        correct_predictions += results[k][0]
+        incorrect_predictions += results[k][1]
 
     accuracy = correct_predictions / (correct_predictions + incorrect_predictions)
     
