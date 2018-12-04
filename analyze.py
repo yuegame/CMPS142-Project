@@ -5,8 +5,10 @@
 import csv
 import sys
 import math
+import random
+import operator
 
-num_neighbors = 5
+num_neighbors = 9
 
 # L1 calculations
 def euclidean_calculation(test_row, train_nodes):
@@ -27,15 +29,18 @@ def euclidean_calculation(test_row, train_nodes):
 
 def main():
 
-    if(len(sys.argv) != 2):
+    phrase_id = -1
+    if(len(sys.argv) > 2):
         print("Usage: python analyze.py phraseID")
         return
-    else:
+    elif (len(sys.argv) == 2):
         phrase_id = sys.argv[1]
+
+    train_nodes = []
+    
     
     with open('train.csv') as train_file:
         train_reader = csv.reader(train_file, delimiter=',')
-        train_nodes = []
 
         #Parses train.csv in (PhraseId, SentenceId, Sentence, Sentiment) tuples
         train_header_parsed = False
@@ -44,25 +49,58 @@ def main():
                 train_header_parsed = True
             else:
                 train_nodes.append(row)
+
+    test_nodes=[]
     
-    for index in range(0, len(train_nodes)):
-        if(train_nodes[index][0] == phrase_id):
-            neighbors = euclidean_calculation(train_nodes[index], train_nodes)
-            print("The",num_neighbors,"closest neighbors are:")
-            for i in range(num_neighbors):
-                print(neighbors[i])
+    for index in range(0, 25000):
+        test_nodes.append(train_nodes.pop(random.randint(0,len(train_nodes)-1)))
 
-            distribution = {}
-            print("\nThe sentiment distribution between the", num_neighbors,"neighbors is:")
-            for i in range(num_neighbors):
-                if int(neighbors[i][2]) not in distribution:
-                    distribution[int(neighbors[i][2])] = 1
-                else:
-                    distribution[int(neighbors[i][2])] = distribution[int(neighbors[i][2])] + 1 
-            print(distribution)
-            return
+    print("Length of training nodes is: ", len(train_nodes))
+    print("Length of test nodes is: ", len(test_nodes))
 
-    print("PhraseID not found!")
+    if(int(phrase_id) >= 0):
+        for index in range(0, len(train_nodes)):
+            if(train_nodes[index][0] == phrase_id):
+                neighbors = euclidean_calculation(train_nodes[index], train_nodes)
+                print("The",num_neighbors,"closest neighbors are:")
+                for i in range(num_neighbors):
+                    print(neighbors[i])
+
+                distribution = {}
+                print("\nThe sentiment distribution between the", num_neighbors,"neighbors is:")
+                for i in range(num_neighbors):
+                    if int(neighbors[i][2]) not in distribution:
+                        distribution[int(neighbors[i][2])] = 1
+                    else:
+                        distribution[int(neighbors[i][2])] = distribution[int(neighbors[i][2])] + 1 
+                print(distribution)
+                return
+
+    correct_predictions = 0
+    incorrect_predictions = 0
+    for test_index in range(len(test_nodes)):
+        neighbors = euclidean_calculation(test_nodes[test_index], train_nodes)
+
+        distribution = {}
+        for i in range(num_neighbors):
+            if int(neighbors[i][2]) not in distribution:
+                distribution[int(neighbors[i][2])] = 1
+            else:
+                distribution[int(neighbors[i][2])] = distribution[int(neighbors[i][2])] + 1
+                
+        prediction = max(distribution.items(), key=operator.itemgetter(1))[0]
+        if int(prediction) == test_nodes[test_index][2]:
+            correct_predictions += 1
+        else:
+            incorrect_predictions += 1
+
+    accuracy = correct_predictions / (correct_predictions + incorrect_predictions)
+    
+    if(int(phrase_id) >=0 ):
+        print("PhraseID not found!")
+    else:
+        print("We have", correct_predictions,"correct predictions and",incorrect_predictions,
+              "incorrect predictions for an accuracy of",accuracy)
     return
         
                     
