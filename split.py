@@ -1,6 +1,4 @@
-s = "us to remember that life 's ultimately a gamble and last orders are to aren't can't"
-
-def tokenize(s)
+def tokenize(s):
     combined = []
     words = s.split(' ')
     i = 0
@@ -12,8 +10,7 @@ def tokenize(s)
             else:
                 combined.append(words[i])
         i += 1
-
+    
     combined.append(words[i])
 
-print(combined)
-
+    return combined
