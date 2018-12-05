@@ -8,7 +8,8 @@ import math
 import random
 import operator
 from multiprocessing import Pool
-from multiprocessing import Process
+from multiprocessing import Process, Queue
+from itertools import product
 
 num_neighbors = 9
 
@@ -30,11 +31,13 @@ def euclidean_calculation(test_row, train_nodes):
     return output_list
 
 # Multiprocess KNN
-def multi_knn(test_nodes, training_nodes, start, end, results):
+def multi_knn(test_nodes, train_nodes, start, end, queue):
     correct_predictions = 0
     incorrect_predictions = 0
     for test_index in range(start, end):
-        print("Index is: ",test_index)
+        if(test_index % 50 == 0 and start == 0):
+            percentage = (float(test_index)/(end - start))*100
+            print(percentage,"% done")
         neighbors = euclidean_calculation(test_nodes[test_index], train_nodes)
 
         distribution = {}
@@ -45,12 +48,12 @@ def multi_knn(test_nodes, training_nodes, start, end, results):
                 distribution[int(neighbors[i][2])] = distribution[int(neighbors[i][2])] + 1
                 
         prediction = max(distribution.items(), key=operator.itemgetter(1))[0]
-        if int(prediction) == test_nodes[test_index][2]:
+        if int(prediction) == int(test_nodes[test_index][3]):
             correct_predictions += 1
         else:
             incorrect_predictions += 1
 
-    results[start] = (correct_predictions, incorrect_predictions)
+    queue.put((correct_predictions, incorrect_predictions))
     
 
 def main():
@@ -105,30 +108,25 @@ def main():
     correct_predictions = 0
     incorrect_predictions = 0
     results={}
+    queue = Queue()
+    pool = []
 
-    p1 = Process(target=multi_knn, args=(test_data,training_data,0, 5000,results))
-    p2 = Process(target=multi_knn, args=(test_data,training_data,5000, 10000,results))
-    p3 = Process(target=multi_knn, args=(test_data,training_data,10000, 15000,results))
-    p4 = Process(target=multi_knn, args=(test_data,training_data,15000, 20000,results))
-    p5 = Process(target=multi_knn, args=(test_data,training_data,20000, 25000,results))
+    process_count = 25
+    increment = 25000/process_count
+    
+    # Multiprocessing done here
+    for i in range(process_count):
+        pool.append(Process(target=multi_knn, args=(test_nodes,train_nodes,increment*i, increment*(i+1),queue)))
+        pool[i].start()
 
-    p1.start()
-    p2.start()
-    p3.start()
-    p4.start()
-    p5.start()
+    # Finish processes and tally results for testing accuracy
+    for i in range(process_count):
+        data = queue.get()
+        correct_predictions += data[0]
+        incorrect_predictions += data[1]
+        pool[i].join()
 
-    p1.join()
-    p2.join()
-    p3.join()
-    p4.join()
-    p5.join()
-
-    for k in results.keys():
-        correct_predictions += results[k][0]
-        incorrect_predictions += results[k][1]
-
-    accuracy = correct_predictions / (correct_predictions + incorrect_predictions)
+    accuracy = float(correct_predictions) / (correct_predictions + incorrect_predictions)
     
     if(int(phrase_id) >=0 ):
         print("PhraseID not found!")
