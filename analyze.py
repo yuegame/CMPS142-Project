@@ -12,9 +12,13 @@ from multiprocessing import Process, Queue
 from itertools import product
 
 num_neighbors = 9
-
+results={}
 # L1 calculations
+def set_results(key, correct, incorrect):
+    results[key] = (correct, incorrect)
+    
 def euclidean_calculation(test_row, train_nodes):
+    
     node_distances = []
     
     for node in train_nodes:
@@ -22,7 +26,6 @@ def euclidean_calculation(test_row, train_nodes):
         
         dist_sum = dist_sum + (int(test_row[0])-int(node[0]))**2
         dist_sum = dist_sum + 50*((int(test_row[1])-int(node[1]))**2)
-                
                                    
         distance = math.sqrt(dist_sum)
         node_distances.append((node, distance, node[3]))
@@ -31,13 +34,23 @@ def euclidean_calculation(test_row, train_nodes):
     return output_list
 
 # Multiprocess KNN
+<<<<<<< HEAD
 def multi_knn(test_nodes, train_nodes, start, end, queue):
+=======
+def multi_knn(test_nodes, train_nodes, start, end):
+>>>>>>> 42fe4606ddbff6ea24609abad1b1e9422d149c63
     correct_predictions = 0
     incorrect_predictions = 0
+    print()
     for test_index in range(start, end):
+<<<<<<< HEAD
         if(test_index % 50 == 0 and start == 0):
             percentage = (float(test_index)/(end - start))*100
             print(percentage,"% done")
+=======
+        print("Index: ",test_index)
+    
+>>>>>>> 42fe4606ddbff6ea24609abad1b1e9422d149c63
         neighbors = euclidean_calculation(test_nodes[test_index], train_nodes)
 
         distribution = {}
@@ -48,12 +61,25 @@ def multi_knn(test_nodes, train_nodes, start, end, queue):
                 distribution[int(neighbors[i][2])] = distribution[int(neighbors[i][2])] + 1
                 
         prediction = max(distribution.items(), key=operator.itemgetter(1))[0]
+<<<<<<< HEAD
+=======
+        print("prediction", prediction)
+        print("index", test_nodes[test_index][3])
+>>>>>>> 42fe4606ddbff6ea24609abad1b1e9422d149c63
         if int(prediction) == int(test_nodes[test_index][3]):
             correct_predictions += 1
         else:
             incorrect_predictions += 1
 
+<<<<<<< HEAD
     queue.put((correct_predictions, incorrect_predictions))
+=======
+        print (correct_predictions, incorrect_predictions)
+
+    set_results(start, correct_predictions, incorrect_predictions)
+    #results[start] = (correct_predictions, incorrect_predictions)
+    print(results)
+>>>>>>> 42fe4606ddbff6ea24609abad1b1e9422d149c63
     
 
 def main():
@@ -81,7 +107,7 @@ def main():
 
     test_nodes=[]
     
-    for index in range(0, 25000):
+    for index in range(0, 2500):
         test_nodes.append(train_nodes.pop(random.randint(0,len(train_nodes)-1)))
 
     print("Length of training nodes is: ", len(train_nodes))
@@ -107,6 +133,7 @@ def main():
 
     correct_predictions = 0
     incorrect_predictions = 0
+
     results={}
     queue = Queue()
     pool = []
@@ -127,6 +154,7 @@ def main():
         pool[i].join()
 
     accuracy = float(correct_predictions) / (correct_predictions + incorrect_predictions)
+
     
     if(int(phrase_id) >=0 ):
         print("PhraseID not found!")

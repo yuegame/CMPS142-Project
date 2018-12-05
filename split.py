@@ -1,6 +1,5 @@
-s = "us to remember that life 's ultimately a gamble and last orders are to aren't can't"
-
-def tokenize(s)
+def tokenize(s):
+    last_punct = False
     combined = []
     words = s.split(' ')
     i = 0
@@ -9,11 +8,14 @@ def tokenize(s)
             if(not words[i+1][0].isalpha()):
                 combined.append(words[i] + words[i + 1])
                 i += 1
+
+                if i == len(words) - 1:
+                    last_punct = True
             else:
                 combined.append(words[i])
         i += 1
+    
+    if not last_punct:
+        combined.append(words[i])
 
-    combined.append(words[i])
-
-print(combined)
-
+    return combined
