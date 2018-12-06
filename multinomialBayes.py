@@ -37,25 +37,20 @@ if __name__ == "__main__":
     # Compute the error.  It is slightly different from our model because the internals of this process work differently from our implementation.
     comparison = list(zip([int(n[3]) for n in test_set], predictions))
     
-    correct, incorrect = 0, 0
-    len_correct, len_incorrect = 0, 0
-    for i in range(len(comparison)):
-        if (comparison[i][0] == comparison[i][1]):
-            correct += 1
-            len_correct += len(test_set[i][2])
-            print(test_set[i][2])
-        else:
-            print("\t" + test_set[i][2])
-            len_incorrect += len(test_set[i][2])
-            incorrect += 1
+    # file = open("bayes_results.csv", "w")
+
+
+    # correct, incorrect = 0, 0
+    # len_correct, len_incorrect = 0, 0
+    # for i in range(len(comparison)):
+    #     if (comparison[i][0] == comparison[i][1]):
+    #         correct += 1
+    #         len_correct += len(test_set[i][2])
+    #         print(test_set[i][2])
+    #     else:
+    #         print("\t" + test_set[i][2])
+    #         len_incorrect += len(test_set[i][2])
+    #         incorrect += 1
     
-    accuracy = correct / (correct + incorrect)
+    # accuracy = correct / (correct + incorrect)
     print(accuracy)
-
-    len_correct = len_correct/correct
-    len_incorrect = len_incorrect/incorrect
-    avg_len = (len_incorrect + incorrect)/(len(comparison))
-
-    print("Avg. length correct: ", len_correct)
-    print("Avg. length incorrect: ", len_incorrect)
-    print("Avg. length overall: ", avg_len)
