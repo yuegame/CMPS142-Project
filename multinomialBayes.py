@@ -2,26 +2,12 @@ import csv, sys, math, random, operator
 import split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn import metrics
-from nltk import word_tokenize
-from nltk.stem import PorterStemmer
 
 train_nodes = []
 
 def get_features(train_set, test_set):
-    phrases = [n[2] for n in train_set]
-    tokenized = [word_tokenize(phrase) for phrase in phrases]  
-    stemmer = PorterStemmer()
-    
-    for i in range(len(tokenized)):
-        tokenized[i]= " ".join([stemmer.stem(token) for token in tokenized[i]])
-    
-    print(tokenized)
     vectorizer = CountVectorizer(tokenizer=split.tokenize)
-    train = vectorizer.fit_transform(tokenized)
-    # transformer = TfidfTransformer().fit(train)
-    # train = transformer.transform(train)  
-
+    train = vectorizer.fit_transform([n[2] for n in train_set])
     test = vectorizer.transform([n[2] for n in test_set])
     return (train, test)
     
@@ -37,7 +23,10 @@ if __name__ == "__main__":
             else:
                 train_nodes.append(row)
 
-    train_set, test_set = train_nodes[:80000], train_nodes[80000:]
+    train_set = []
+    for index in range(0, 85000):
+        train_set.append(train_nodes.pop(random.randint(0,len(train_nodes)-1)))
+    test_set = train_nodes
     train_features, test_features = get_features(train_set, test_set)
     nb = MultinomialNB()
     nb.fit(train_features, [int(n[3]) for n in train_set])
@@ -46,14 +35,27 @@ if __name__ == "__main__":
     print(predictions)
 
     # Compute the error.  It is slightly different from our model because the internals of this process work differently from our implementation.
-    comparison = zip([int(n[3]) for n in test_set], predictions)
+    comparison = list(zip([int(n[3]) for n in test_set], predictions))
     
     correct, incorrect = 0, 0
-    for pair in comparison:
-        if (pair[0] == pair[1]):
+    len_correct, len_incorrect = 0, 0
+    for i in range(len(comparison)):
+        if (comparison[i][0] == comparison[i][1]):
             correct += 1
+            len_correct += len(test_set[i][2])
+            print(test_set[i][2])
         else:
+            print("\t" + test_set[i][2])
+            len_incorrect += len(test_set[i][2])
             incorrect += 1
     
     accuracy = correct / (correct + incorrect)
     print(accuracy)
+
+    len_correct = len_correct/correct
+    len_incorrect = len_incorrect/incorrect
+    avg_len = (len_incorrect + incorrect)/(len(comparison))
+
+    print("Avg. length correct: ", len_correct)
+    print("Avg. length incorrect: ", len_incorrect)
+    print("Avg. length overall: ", avg_len)
