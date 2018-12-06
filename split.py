@@ -5,7 +5,7 @@ def tokenize(s):
     i = 0
     while i < len(words) - 1:
         if i != len(words) - 1:
-            if(not words[i+1][0].isalpha()):
+            if(words[i+1][0] == "'"):
                 combined.append(words[i] + words[i + 1])
                 i += 1
 
