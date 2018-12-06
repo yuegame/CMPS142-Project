@@ -29,6 +29,6 @@ if __name__ == "__main__":
 
     train_set = get_features(train_nodes)
     classifier = nltk.NaiveBayesClassifier.train(train_set)
-    prediction = classifier.classify({word:1 for word in split.tokenize(', inane images keep popping past your head')})
+    prediction = classifier.classify({word:1 for word in split.tokenize('good')})
     print(prediction)
 
