@@ -1,17 +1,21 @@
 import csv, sys, math, random, operator
-import nltk, split
+import split
 
 train_nodes = []
 
 def get_features(train_nodes):
+    f = {}
+
+def get_features(train_nodes):
     f = []
-
+    phrase_features = {word: 0 for word in all_words}
     for node in train_nodes:
-        (phrase_id, sentence_id, phrase, label) = node
+        phrase, label = node[-2], node[-1]
         words = split.tokenize(phrase)
-        phrase_features = ({word: 1 for word in words}, label)
-        f.append(phrase_features)
 
+        for word in words:
+            f[word] = label
+    
     return f
 
     
@@ -27,8 +31,9 @@ if __name__ == "__main__":
             else:
                 train_nodes.append(row)
 
+    print(train_nodes[:5])
     train_set = get_features(train_nodes)
-    classifier = nltk.NaiveBayesClassifier.train(train_set)
-    prediction = classifier.classify({word:1 for word in split.tokenize('good')})
-    print(prediction)
+
+    print(train_set[0])
+
 

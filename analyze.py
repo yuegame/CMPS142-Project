@@ -34,23 +34,9 @@ def euclidean_calculation(test_row, train_nodes):
     return output_list
 
 # Multiprocess KNN
-<<<<<<< HEAD
+
 def multi_knn(test_nodes, train_nodes, start, end, queue):
-=======
-def multi_knn(test_nodes, train_nodes, start, end):
->>>>>>> 42fe4606ddbff6ea24609abad1b1e9422d149c63
-    correct_predictions = 0
-    incorrect_predictions = 0
-    print()
     for test_index in range(start, end):
-<<<<<<< HEAD
-        if(test_index % 50 == 0 and start == 0):
-            percentage = (float(test_index)/(end - start))*100
-            print(percentage,"% done")
-=======
-        print("Index: ",test_index)
-    
->>>>>>> 42fe4606ddbff6ea24609abad1b1e9422d149c63
         neighbors = euclidean_calculation(test_nodes[test_index], train_nodes)
 
         distribution = {}
@@ -61,25 +47,9 @@ def multi_knn(test_nodes, train_nodes, start, end):
                 distribution[int(neighbors[i][2])] = distribution[int(neighbors[i][2])] + 1
                 
         prediction = max(distribution.items(), key=operator.itemgetter(1))[0]
-<<<<<<< HEAD
-=======
-        print("prediction", prediction)
-        print("index", test_nodes[test_index][3])
->>>>>>> 42fe4606ddbff6ea24609abad1b1e9422d149c63
-        if int(prediction) == int(test_nodes[test_index][3]):
-            correct_predictions += 1
-        else:
-            incorrect_predictions += 1
+        #print(str(test_index)+" done")
+        queue.put((test_nodes[test_index][0],test_nodes[test_index][1],test_nodes[test_index][2],str(prediction)))
 
-<<<<<<< HEAD
-    queue.put((correct_predictions, incorrect_predictions))
-=======
-        print (correct_predictions, incorrect_predictions)
-
-    set_results(start, correct_predictions, incorrect_predictions)
-    #results[start] = (correct_predictions, incorrect_predictions)
-    print(results)
->>>>>>> 42fe4606ddbff6ea24609abad1b1e9422d149c63
     
 
 def main():
@@ -93,7 +63,6 @@ def main():
 
     train_nodes = []
     
-    
     with open('train.csv') as train_file:
         train_reader = csv.reader(train_file, delimiter=',')
 
@@ -105,10 +74,22 @@ def main():
             else:
                 train_nodes.append(row)
 
+
     test_nodes=[]
+
+    with open('testset_1.csv') as test_file:
+        test_reader = csv.reader(test_file, delimiter = ',')
+
+        test_header_parsed = False
+        for row in test_reader:
+            if not test_header_parsed:
+                test_header_parsed = True
+            else:
+                test_nodes.append(row)
+
     
-    for index in range(0, 2500):
-        test_nodes.append(train_nodes.pop(random.randint(0,len(train_nodes)-1)))
+    #for index in range(0, 2500):
+    #   test_nodes.append(train_nodes.pop(random.randint(0,len(train_nodes)-1)))
 
     print("Length of training nodes is: ", len(train_nodes))
     print("Length of test nodes is: ", len(test_nodes))
@@ -131,36 +112,55 @@ def main():
                 print(distribution)
                 return
 
-    correct_predictions = 0
-    incorrect_predictions = 0
+    #correct_predictions = 0
+    #incorrect_predictions = 0
 
-    results={}
+    results=[]
     queue = Queue()
     pool = []
 
     process_count = 25
-    increment = 25000/process_count
+    increment = int(len(test_nodes)/process_count)
     
     # Multiprocessing done here
     for i in range(process_count):
         pool.append(Process(target=multi_knn, args=(test_nodes,train_nodes,increment*i, increment*(i+1),queue)))
         pool[i].start()
+        if(i+1 == process_count):
+            pool.append(Process(target=multi_knn, args=(test_nodes, train_nodes, 1+(increment*process_count), len(test_nodes), queue)))
+            pool[i+1].start()
+
+    completion = 0
+
+    while(len(results) < len(test_nodes)):
+
+        try:
+            data = queue.get(timeout = 10)
+        except:
+            break
+        if(((float(len(results))/len(test_nodes))*100) - completion > .1):
+            completion = (float(len(results))/len(test_nodes))*100
+            print(str(completion)[:4]+"% done")
+        results.append((data[0], data[1], data[2], data[3]))
+        print(-len(results)+len(test_nodes))
+
+    print(results)
 
     # Finish processes and tally results for testing accuracy
-    for i in range(process_count):
-        data = queue.get()
-        correct_predictions += data[0]
-        incorrect_predictions += data[1]
+    for i in range(len(pool)):
         pool[i].join()
 
-    accuracy = float(correct_predictions) / (correct_predictions + incorrect_predictions)
-
+    print("Writing results...")
+    file = open("results.csv", "w")
+    for i in range(len(results)):
+        file.write(str(results[i][0])+","+str(results[i][3])+"\n")
+    file.close()
+    print("Done!")
     
     if(int(phrase_id) >=0 ):
         print("PhraseID not found!")
     else:
-        print("We have", correct_predictions,"correct predictions and",incorrect_predictions,
-              "incorrect predictions for an accuracy of",accuracy)
+        pass
     return
         
                     
