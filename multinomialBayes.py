@@ -4,9 +4,10 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 train_nodes = []
+test_nodes = []
 
 def get_features(train_set, test_set):
-    vectorizer = CountVectorizer(tokenizer=split.tokenize)
+    vectorizer = CountVectorizer()
     train = vectorizer.fit_transform([n[2] for n in train_set])
     test = vectorizer.transform([n[2] for n in test_set])
     return (train, test)
@@ -23,34 +24,31 @@ if __name__ == "__main__":
             else:
                 train_nodes.append(row)
 
-    train_set = []
-    for index in range(0, 85000):
-        train_set.append(train_nodes.pop(random.randint(0,len(train_nodes)-1)))
-    test_set = train_nodes
-    train_features, test_features = get_features(train_set, test_set)
+    with open('testset_1.csv') as test_file:
+        test_reader = csv.reader(test_file, delimiter=',')
+
+        #Parses train.csv in (PhraseId, SentenceId, Sentence, Sentiment) tuples
+        test_header_parsed = False
+        for row in test_reader:
+            if not test_header_parsed:
+                test_header_parsed = True
+            else:
+                test_nodes.append(row)
+
+    train_features, test_features = get_features(train_nodes, test_nodes)
     nb = MultinomialNB()
-    nb.fit(train_features, [int(n[3]) for n in train_set])
-    
+    nb.fit(train_features, [int(n[3]) for n in train_nodes])
     predictions = nb.predict(test_features)
-    print(predictions)
-
-    # Compute the error.  It is slightly different from our model because the internals of this process work differently from our implementation.
-    comparison = list(zip([int(n[3]) for n in test_set], predictions))
     
-    # file = open("bayes_results.csv", "w")
+    flags = []
+    for row in test_nodes:
+        phrase = row[2]
+        flags.append(0 if len(phrase) < 46 else 1)
 
-
-    # correct, incorrect = 0, 0
-    # len_correct, len_incorrect = 0, 0
-    # for i in range(len(comparison)):
-    #     if (comparison[i][0] == comparison[i][1]):
-    #         correct += 1
-    #         len_correct += len(test_set[i][2])
-    #         print(test_set[i][2])
-    #     else:
-    #         print("\t" + test_set[i][2])
-    #         len_incorrect += len(test_set[i][2])
-    #         incorrect += 1
-    
-    # accuracy = correct / (correct + incorrect)
-    print(accuracy)
+    file = open("bayes_results.csv", "w")
+    for i in range(len(predictions)):
+        result = map(str, [test_nodes[i][0], predictions[i], '"' + test_nodes[i][2] + '"', flags[i]])
+        write_line = ", ".join(result) + "\n"
+        print(write_line)
+        file.write(write_line)
+    file.close()
