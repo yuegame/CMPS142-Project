@@ -1,3 +1,9 @@
+#Ruihong Yu
+#Edmund Yu
+#Rohit Falor
+
+#Merges two csv files produced by KNN and Bayes
+#to one for refining results
 import sys
 import csv
 
@@ -5,6 +11,7 @@ if __name__ == '__main__':
 
     knn_results = []
 
+    # Open both files
     with open('knn_results.csv') as knn_file:
         knn_reader = csv.reader(knn_file, delimiter = ',')
 
@@ -13,6 +20,7 @@ if __name__ == '__main__':
 
     bayes_results = []
 
+    # If flag is set, replace Bayes with KNN value
     with open('bayes.csv') as bayes_file:
         bayes_reader = csv.reader(bayes_file, delimiter = ',')
         for row in bayes_reader:
@@ -35,6 +43,7 @@ if __name__ == '__main__':
 
     test = []
 
+    # Sort file in test set's original order
     with open('testset_1.csv') as test_file:
         test_reader = csv.reader(test_file, delimiter = ',')
         
@@ -56,12 +65,15 @@ if __name__ == '__main__':
                 print(counter)
                 knn_results[knn_index], knn_results[test_index] = knn_results[test_index], knn_results[knn_index]
 
+    # Write to new file
     file = open("predictions.csv", "w")
     file.write("PhraseID,Sentiment\n")
     for index in range(len(knn_results)):
         file.write(knn_results[index][0]+","+knn_results[index][1]+"\n")
 
     file.close()
+
+    # Analytics to see effect of merging
     print(str(changed)+" sentiments changed!")
     print(str(supposedly_incorrect)+" instances are supposedly incorrect in Bayes!")
     print(str(disagree)+" instances are different between Bayes and KNN!")

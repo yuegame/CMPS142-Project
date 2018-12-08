@@ -1,7 +1,7 @@
 #Ruihong Yu
 #Edmund Yu
 #Rohit Falor
-#Analyzer for train.csv
+#KNN implementation
 import csv
 import sys
 import math
@@ -13,9 +13,6 @@ from itertools import product
 
 num_neighbors = 9
 results={}
-# L1 calculations
-def set_results(key, correct, incorrect):
-    results[key] = (correct, incorrect)
     
 def euclidean_calculation(test_row, train_nodes):
     
@@ -33,7 +30,7 @@ def euclidean_calculation(test_row, train_nodes):
     output_list = sorted(node_distances, key=lambda tup:tup[1])
     return output_list
 
-# Multiprocess KNN
+# Multiprocessed KNN
 
 def multi_knn(test_nodes, train_nodes, start, end, queue):
     for test_index in range(start, end):
@@ -47,7 +44,8 @@ def multi_knn(test_nodes, train_nodes, start, end, queue):
                 distribution[int(neighbors[i][2])] = distribution[int(neighbors[i][2])] + 1
                 
         prediction = max(distribution.items(), key=operator.itemgetter(1))[0]
-        #print(str(test_index)+" done")
+
+        # Appended prediction of each neighbor into queue
         queue.put((test_nodes[test_index][0],test_nodes[test_index][1],test_nodes[test_index][2],str(prediction)))
 
     
@@ -57,6 +55,7 @@ def main():
     phrase_id = -1
     if(len(sys.argv) > 2):
         print("Usage: python analyze.py phraseID")
+        print("Usage: python analyze.py")
         return
     elif (len(sys.argv) == 2):
         phrase_id = sys.argv[1]
@@ -77,6 +76,7 @@ def main():
 
     test_nodes=[]
 
+    # Parses testset_1 in the same way as train.csv
     with open('testset_1.csv') as test_file:
         test_reader = csv.reader(test_file, delimiter = ',')
 
@@ -87,13 +87,11 @@ def main():
             else:
                 test_nodes.append(row)
 
-    
-    #for index in range(0, 2500):
-    #   test_nodes.append(train_nodes.pop(random.randint(0,len(train_nodes)-1)))
 
     print("Length of training nodes is: ", len(train_nodes))
     print("Length of test nodes is: ", len(test_nodes))
 
+    # Used in debugging purposes to find the prediction for a specific phraseID
     if(int(phrase_id) >= 0):
         for index in range(0, len(train_nodes)):
             if(train_nodes[index][0] == phrase_id):
@@ -112,6 +110,7 @@ def main():
                 print(distribution)
                 return
 
+    # Used in training data testing
     #correct_predictions = 0
     #incorrect_predictions = 0
 
@@ -119,6 +118,7 @@ def main():
     queue = Queue()
     pool = []
 
+    # Sets up processes for multiprocessing
     process_count = 25
     increment = int(len(test_nodes)/process_count)
     
@@ -132,6 +132,7 @@ def main():
 
     completion = 0
 
+    # Gives realtime updates for results
     while(len(results) < len(test_nodes)):
 
         try:
@@ -144,19 +145,21 @@ def main():
         results.append((data[0], data[1], data[2], data[3]))
         print(-len(results)+len(test_nodes))
 
-    print(results)
+    #print(results)
 
-    # Finish processes and tally results for testing accuracy
+    # Finish processes
     for i in range(len(pool)):
         pool[i].join()
 
+    # Writes results to CSV file
     print("Writing results...")
     file = open("results.csv", "w")
     for i in range(len(results)):
         file.write(str(results[i][0])+","+str(results[i][3])+"\n")
     file.close()
     print("Done!")
-    
+
+    # Only reached if debugging
     if(int(phrase_id) >=0 ):
         print("PhraseID not found!")
     else:
